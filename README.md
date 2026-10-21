@@ -10,33 +10,67 @@ or an exact reproduction of the original levels, graphics or scoring.
 
 ## Quick start on Windows
 
-1. Extract **Scramble.zip** into a folder of your choice.
-2. Open the extracted **Scramble** folder.
-3. Double-click **run.bat**.
-4. Press **Enter** to start your mission.
+1. Download and install [Git for Windows](https://git-scm.com/downloads/win),
+   including **Git Bash**.
+2. Install an **OpenJDK JDK, Java 8 or later**, and make sure its `bin` folder is
+   on PATH. You need the JDK, including `javac` and `jar`, to build the game.
+   [OpenJDK downloads](https://jdk.java.net/)
+3. Open a new **Git Bash** window and check Java is available:
 
-You need **Java 8 or later** installed and available on PATH. The ZIP includes a
-ready-to-run **Scramble.jar**, so rebuilding is optional.
+   ```bash
+   java -version
+   javac -version
+   ```
 
-[OpenJDK downloads](https://jdk.java.net/)
+4. In the folder where you want to keep the project, clone the repository:
 
-From Command Prompt:
+   ```bash
+   git clone https://github.com/CharlieSwires/scramble.git
+   cd scramble
+   ```
+
+5. Build and run:
+
+   ```bash
+   bash build.sh
+   bash run.sh
+   ```
+
+6. Press **Enter** at the title screen to start your mission.
+
+The repository does not track `Scramble.jar`, so **build it after cloning**.
+The build creates the runnable JAR locally. Rebuild whenever you change the
+source or pull an update that changes it.
+
+### Windows Command Prompt alternative
+
+After installing Git and the JDK, open Command Prompt in your chosen parent
+folder and run:
 
 ```bat
-cd path\to\Scramble
+git clone https://github.com/CharlieSwires/scramble.git
+cd scramble
+build.bat
 run.bat
 ```
 
-From Git Bash, Linux or macOS:
+If you already cloned it using the steps above, skip `git clone` and open the
+existing project folder. You can also double-click **build.bat**, then
+**run.bat**, in File Explorer.
+
+### Linux or macOS
+
+With Git and an OpenJDK JDK installed:
 
 ```bash
-cd path/to/Scramble
-./run.sh
+git clone https://github.com/CharlieSwires/scramble.git
+cd scramble
+bash build.sh
+bash run.sh
 ```
 
-Use `bash run.sh` if executable permissions were not retained when extracting.
-The launch scripts select the project folder as the working directory.
-You can also run directly:
+The launch scripts select the project folder as the working directory. After
+building, you can also run directly from that folder:
 
 ```bash
 java -jar Scramble.jar
