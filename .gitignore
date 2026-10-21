@@ -1,0 +1,6 @@
+/bin/
+/build/
+/Scramble.jar
+/scramble-scores.bin
+/sound-diagnostics.txt
+*.tmp
