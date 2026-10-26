@@ -134,7 +134,7 @@ final class FlightPanel extends JPanel {
         text(g,"FUEL",11,MUTED,358,32);box(g,358,42,200,14,new Color(39,51,63));
         Color fuelColor=game.fuel<25?new Color(255,112,110):CYAN;box(g,358,42,(int)(game.fuel*2),14,fuelColor);
         text(g,String.format("%03d%%",(int)game.fuel),12,fuelColor,569,54);
-        text(g,"LIVES "+game.lives,12,Color.WHITE,655,33);text(g,"LEVEL "+game.level(),12,CYAN,655,57);
+        text(g,"LIVES "+game.lives,12,Color.WHITE,655,33);text(g,"LEVEL "+game.level()+" / "+Math.round(game.difficultyMultiplier()*100)+"%",12,CYAN,655,57);
         String audio=muted?"MUTED":sound==null?"AUDIO OFF":sound.status();text(g,audio,10,MUTED,828,33);text(g,"P / PAUSE",10,MUTED,828,57);
         text(g,String.format("%02d  %s",game.section()+1,Terrain.name(game.scroll)),12,CYAN,25,102);
         double progress=(game.scroll%Terrain.SECTION_LENGTH)/Terrain.SECTION_LENGTH;box(g,704,91,225,4,new Color(27,48,63));box(g,704,91,(int)(225*progress),4,CYAN);

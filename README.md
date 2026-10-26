@@ -112,8 +112,9 @@ The route repeats through four sections:
 | The Caverns | A continuous ceiling and floor forming a tighter flight corridor |
 | Fortress Run | Ground turrets and fortified bases, plus fuel tanks and drones |
 
-Each section spans 4,000 world pixels. After all four, the next level increases
-scroll speed and enemy pressure. The HUD shows section progress, fuel, lives,
+Each section spans 4,000 world pixels. After all four, the route repeats with
+**5% more scrolling speed**, compounded on every cycle: 100%, 105%, 110.25%,
+115.76%, and so on. There is no previous 220-pixel/second ceiling. The HUD shows section progress, fuel, lives,
 score and best score. Clearing a section awards **500 points**.
 
 ### Weapons
@@ -297,3 +298,32 @@ Scramble/
 Copyright © 2026 Charlie's Tenacity Ltd. All rights reserved for project code.
 This independent Scramble-inspired game contains no original Konami ROMs,
 extracted arcade graphics or recordings. See **CREDITS.md** for the code lineage.
+
+## Predictive gun aiming and progressive speed
+
+The cycle multiplier is `1.05^(level - 1)` and scrolling speed is
+`150 * multiplier` world pixels per second. The HUD shows the current percentage.
+A full cycle is Ridgeline → Missile Valley → Caverns → Fortress Run.
+Enemy bullet speed remains 220 world pixels per second; player control speed and
+weapon physics are unchanged. Existing level-dependent rocket, drone and fuel
+behaviour remains in place.
+
+Turrets and bases now aim at a predicted interception point. At firing, the ship's
+actual world-space velocity is measured, including scrolling and movement keys.
+Clamping against screen bounds is respected; protective repositioning is not
+mistaken for extreme vertical speed.
+
+For relative position `r`, ship velocity `v` and bullet speed `s`, solve:
+
+```text
+|r + v*t| = s*t
+(v·v - s*s)*t*t + 2*(r·v)*t + r·r = 0
+```
+
+The earliest positive root gives the aiming point `shipPosition + shipVelocity*t`.
+This is the intersection of the projected ship trajectory and the expanding
+circle from the gun. Equal-speed and no-solution cases are handled. When no
+future intercept exists, the gun aims directly at the ship's current position.
+A bullet keeps its launch velocity: changing direction after a shot is fired can
+still dodge it. Terrain may block shots, and bullets retain their seven-second
+lifetime, so a mathematical interception is not a guarantee of a hit.

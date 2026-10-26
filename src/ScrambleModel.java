@@ -29,6 +29,7 @@ final class ScrambleModel {
     int lives=3,score;
     double scroll,playerX=160,playerY=300,fuel=100,time,stateTime,invulnerable;
     boolean left,right,up,down,fire,bomb;
+    double shipVelocityX,shipVelocityY;
     String message="";
     private double shotDelay,bombDelay,nextObject,nextDrone;
     private int nextBonus;
@@ -38,10 +39,12 @@ final class ScrambleModel {
         scroll=0;time=0;stateTime=0;lives=3;score=0;fuel=100;playerX=160;playerY=300;
         nextObject=650;nextDrone=1200;shotDelay=bombDelay=0;nextBonus=10000;
         invulnerable=2.4;state=State.PLAYING;message="";resetControls();
+        shipVelocityX=speed();shipVelocityY=0;
         targets.clear();shots.clear();explosions.clear();populate();
     }
     double playerWorldX(){return scroll+playerX;}
-    double speed(){return 150+Math.min(70,Terrain.section(scroll)/4*12);}
+    double difficultyMultiplier(){return Math.pow(1.05,level()-1);}
+    double speed(){return 150*difficultyMultiplier();}
     int section(){return Terrain.section(scroll);}
     int level(){return section()/4+1;}
     void update(double dt){
@@ -52,6 +55,8 @@ final class ScrambleModel {
             return;
         }
         if(state!=State.PLAYING)return;
+        double previousWorldX=playerWorldX(),previousY=playerY;
+        boolean terrainAdjusted=false;
         int oldSection=section();scroll+=speed()*dt;
         if(section()!=oldSection){addScore(500);message="SECTION CLEAR +500";sound.accept(SoundEffects.Effect.LEVEL_UP);}
         invulnerable=Math.max(0,invulnerable-dt);
@@ -62,9 +67,13 @@ final class ScrambleModel {
         if(fuel<=0){crash("OUT OF FUEL");return;}
         // Terrain remains solid during respawn protection, but a protected ship is repositioned safely.
         if(terrain.hits(playerWorldX(),playerY,19,10)){
-            if(invulnerable>0)playerY=terrain.corridorMiddle(playerWorldX());
+            if(invulnerable>0){playerY=terrain.corridorMiddle(playerWorldX());terrainAdjusted=true;}
             else{crash("TERRAIN COLLISION");return;}
         }
+        // Measure actual world-space displacement: includes scrolling and respects bounds.
+        // Respawn/terrain correction is a teleport, not a velocity to extrapolate.
+        shipVelocityX=(playerWorldX()-previousWorldX)/dt;
+        shipVelocityY=terrainAdjusted?0:(playerY-previousY)/dt;
         shotDelay-=dt;bombDelay-=dt;
         if(fire&&shotDelay<=0&&shots.stream().filter(p->!p.enemy&&!p.bomb).count()<4){
             shots.add(new Projectile(playerWorldX()+25,playerY,speed()+540,0,false,false));shotDelay=0.16;sound.accept(SoundEffects.Effect.SHOT);
@@ -106,12 +115,18 @@ final class ScrambleModel {
             }else if(t.kind==Kind.DRONE){
                 t.x-=(42+level()*4)*dt;t.y=t.y0+Math.sin(t.age*2.2+t.phase)*32;
             }else if((t.kind==Kind.TURRET||t.kind==Kind.BASE)&&ahead>-50&&ahead<WIDTH&&t.cooldown<=0&&shots.size()<60){
-                double dx=playerWorldX()-t.x,dy=playerY-t.y,d=Math.max(1,Math.hypot(dx,dy));
-                fired.add(new Projectile(t.x,t.y-23,dx/d*220,dy/d*220,true,false));
+                fired.add(enemyShot(t));
                 t.cooldown=1.8+random.nextDouble();sound.accept(SoundEffects.Effect.ENEMY_SHOT);
             }
         }
         shots.addAll(fired);
+    }
+    /** Predict the player's constant-velocity intercept from the visible gun muzzle. */
+    Projectile enemyShot(Target gun) {
+        double muzzleX=gun.x-16,muzzleY=gun.y-(gun.kind==Kind.BASE?27:22)-11;
+        double[] velocity=InterceptAim.velocity(muzzleX,muzzleY,playerWorldX(),playerY,
+                shipVelocityX,shipVelocityY,220);
+        return new Projectile(muzzleX,muzzleY,velocity[0],velocity[1],true,false);
     }
     private void updateProjectiles(double dt){
         for(Iterator<Projectile> it=shots.iterator();it.hasNext();){
@@ -142,6 +157,7 @@ final class ScrambleModel {
     void addScore(int points){score+=points;while(score>=nextBonus){lives++;nextBonus+=10000;message="EXTRA LIFE";sound.accept(SoundEffects.Effect.LEVEL_UP);}}
     void crash(String reason){
         if(state!=State.PLAYING)return;message=reason;
+        shipVelocityX=shipVelocityY=0;
         explosions.add(new SaturnExplosion(playerWorldX(),playerY,random));lives--;resetControls();shots.clear();
         sound.accept(SoundEffects.Effect.PLAYER_HIT);stateTime=0;
         if(lives<=0){state=State.GAME_OVER;sound.accept(SoundEffects.Effect.GAME_OVER);}

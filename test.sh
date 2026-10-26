@@ -6,6 +6,6 @@ mkdir -p build/test-classes
 javac -encoding UTF-8 -source 8 -target 8 -Xlint:-options -cp bin -d build/test-classes tests/*.java
 separator=':'
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) separator=';' ;; esac
-for test in ScrambleTests AudioTests MixerPlaybackTests; do
+for test in ScrambleTests AudioTests MixerPlaybackTests DifficultyAndAimTests; do
     java -Djava.awt.headless=true -cp "bin${separator}build/test-classes" "$test"
 done
